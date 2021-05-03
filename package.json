@@ -1,0 +1,28 @@
+{
+  "name": "simulacion-s4-mesas",
+  "version": "1.0.0",
+  "description": "Lab 4 simulacion por computadores, equipo mesas",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Richardagudelo/simulacion-s4-mesas.git"
+  },
+  "keywords": [
+    "mesas",
+    "simulacion"
+  ],
+  "author": "equipo-mesas",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Richardagudelo/simulacion-s4-mesas/issues"
+  },
+  "homepage": "https://github.com/Richardagudelo/simulacion-s4-mesas#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "winston": "^3.3.3"
+  }
+}
