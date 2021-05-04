@@ -1,7 +1,7 @@
 const { createLogger, transports, format } = require('winston');
 const { combine } = format;
 
-const logsFileName = 'logmesas.log';
+const logsFileName = `${__dirname}/logmesas.log`;
 
 /**
  * Constante de formato para el log en consola
