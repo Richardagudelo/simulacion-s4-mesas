@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const port = process.env.port || 3000;
 app.use(express.json());
-app.use(express.urlencoded());
+app.use(express.urlencoded({extended: true}));
 
 const logger = require('./logging/logger');
 
