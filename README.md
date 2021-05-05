@@ -26,7 +26,7 @@ Desarrollar un programa, basado en la teoría de agentes, que permita ver el fun
 El uso de este proyecto se explica a continuación:
 
 ### Consumir Endpoints
-El proyecto esta desplegado en: https://127.0.0.1:3000/ :trollface:, usando esta url puedes consumir los [Endpoints](#documentacion-endpoints)
+El proyecto esta desplegado en: https://scmesas.azurewebsites.net/, usando esta url puedes consumir los [Endpoints](#documentacion-endpoints)
 
 ### Documentacion Endpoints
 - Ruta prueba despliegue
