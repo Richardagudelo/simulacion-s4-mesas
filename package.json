@@ -23,6 +23,7 @@
   "homepage": "https://github.com/Richardagudelo/simulacion-s4-mesas#readme",
   "dependencies": {
     "express": "^4.17.1",
+    "node-fetch": "^2.6.1",
     "winston": "^3.3.3"
   }
 }
