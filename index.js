@@ -15,11 +15,57 @@ const hostClientes = "https://agente-cliente.herokuapp.com";
 const cantidadMesas = 28;
 let mesas = [];
 let clientesEnEspera = [];
-createTables();
+crearMesas();
 asignarMesa();
 let countOrders = 0;
-//-----------------------------------------------------------------
+//----------------------------------------------INICIALIZACION-------------------
+/**
+ * Creación de mesas
+ */
+function crearMesas() {
+  for (let index = 0; index < cantidadMesas; index++) {
+    mesas.push({
+      id_mesa: index + 1,
+      capacidad: 5,
+      clientes: [],
+      metodo_pago: "",
+      estado: "LIMPIO",
+      hora: "",
+    });
+  }
+}
 
+/**
+ * Revisa si hay clientes en la lista de espera y los asigna a una mesa desocupada
+ */
+function asignarMesa() {
+  setInterval(() => {
+    if (clientesEnEspera[0]) {
+      let mesaDesocupada = obtenerMesaDesocupada();
+      if (mesaDesocupada) {
+        mesaDesocupada.clientes = clientesEnEspera[0];
+        mesaDesocupada.hora = new Date();
+        clientesEnEspera.splice(0, 1);
+        solicitarMenu().then((data) => {
+          console.log("Menu recibido: ", data);
+          enviarMenuyMesa(data, mesaDesocupada).then((data) => {
+            console.log("Orden recibida", data);
+            let ordenMesa = data;
+            actualizarClientesMesa(ordenMesa);
+            tomarOrden(ordenMesa).then((data) => {
+              console.log("Orden enviada a meseros", data);
+            });
+          });
+        });
+      }
+    }
+    //console.log("-------------------MESAS-------------------------");
+    //console.log(mesas);
+    //console.log(clientesEnEspera);
+  }, 1000);
+}
+
+//----------------------------------------------
 app.get("/", (req, res) => {
   res.send("Mesas funcionando !");
 });
@@ -40,14 +86,12 @@ app.post("/agregarClientes", (req, res) => {
  * Los clientes que fueron asignados a la mesa envían los platos que eligieron a partir del menú que se envía
  */
 app.post("/generarOrden", (req, res) => {
-  let ordenMesa = formatOrder(req.body);
-  actualizarClientesMesa(req.body.mesa);
+  let ordenMesa = req.body;
+  actualizarClientesMesa(ordenMesa);
   tomarOrden(ordenMesa).then((data) => {
     res.status(200).json({ message: "Orden recibida por meseros" });
   });
 });
-
-app.post("/salidaCliente", (req, res) => {});
 
 /**
  * EL pedido de la mesa con idMesa es completado por parte de los meseros
@@ -75,25 +119,11 @@ app.get("/mesas", (req, res) => {
   res.status(200).json({ mesas: mesas });
 });
 
-/**
- * Creación de mesas
- */
-function createTables() {
-  for (let index = 0; index < cantidadMesas; index++) {
-    mesas.push({
-      id_mesa: index + 1,
-      capacidad: 5,
-      clientes: [],
-      metodo_pago: "",
-      estado: "LIMPIO",
-      hora: "",
-    });
-  }
-}
-
 function actualizarClientesMesa(mesaActualizada) {
-  mesas.find((mesa) => mesa.id_mesa == mesaActualizada.id_mesa).clientes =
-    mesaActualizada.clientes;
+  let mesa = mesas.find((mesa) => mesa.id_mesa == mesaActualizada.id_mesa);
+  mesa.clientes = mesaActualizada.clientes;
+  mesa.metodo_pago = mesaActualizada.metodo_pago;
+  mesa.tiempo_consumo = mesaActualizada.tiempo_consumo;
 }
 
 /**
@@ -108,34 +138,14 @@ function obtenerMesaDesocupada() {
   }
 }
 
-/**
- * Revisa si hay clientes en la lista de espera y los asigna a una mesa desocupada
- */
-function asignarMesa() {
-  setInterval(() => {
-    if (clientesEnEspera[0]) {
-      let mesaDesocupada = obtenerMesaDesocupada();
-      if (mesaDesocupada) {
-        mesaDesocupada.clientes = clientesEnEspera[0];
-        mesaDesocupada.hora = new Date();
-        clientesEnEspera.splice(0, 1);
-        solicitarMenu().then((data) => {
-          enviarMenuyMesa(data, mesaDesocupada);
-        });
-      }
-    }
-    //console.log(clientesEnEspera);
-  }, 100);
-}
-
 function formatOrder(orderCliente) {
   let orderFormated = {
     id: countOrders,
-    id_mesa: orderCliente.mesa.id_mesa,
+    id_mesa: orderCliente.id_mesa,
     estado: "transito a cocinca",
     ordenes: [],
   };
-  orderCliente.mesa.clientes.forEach((cliente) => {
+  orderCliente.clientes.forEach((cliente) => {
     orderFormated.ordenes.push({
       id_cliente: cliente.id_cliente,
       platos: cliente.platos,
@@ -152,11 +162,10 @@ function formatOrder(orderCliente) {
 function enviarOrdenAPago(mesa, encargado) {
   let mesaAPagar = mesa;
   mesaAPagar.id_encargado = encargado;
-  mesaAPagar.metodo_pago = elegirMetodoDePagoAleatorio();
-  console.log(mesaAPagar);
   realizarPago({ mesa: mesaAPagar })
     .then((data) => {
-      console.log("Pago aceptado: ", data);
+      console.log("----------------------------------------");
+      console.log("!Pago aceptado: !", data);
       limpiarMesa(data.factura.id_mesa);
     })
     .catch((error) => console.log(error));
@@ -234,11 +243,12 @@ async function enviarMenuyMesa(menu, mesa) {
     mesa: mesa,
     menu: menu,
   };
-  console.log(body);
-  return await fetch(hostClientes + "/clientes/orden", {
+
+  return await fetch(hostClientes + "/clientes/ordenar", {
     method: "POST",
     body: JSON.stringify(body),
-  });
+    headers: { "Content-Type": "application/json" },
+  }).then((res) => res.json());
 }
 
 app.listen(port, () => {
