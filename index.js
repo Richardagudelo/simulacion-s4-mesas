@@ -33,7 +33,7 @@ app.post("/agregarClientes", (req, res) => {
   for (let index = 0; index < cantidadNuevasMesas; index++) {
     clientesEnEspera.push(nuevosClientes.splice(0, 5));
   }
-  res.status(200).send("Clientes agregados");
+  res.status(200).json({ message: "Clientes agregados" });
 });
 
 /**
@@ -43,7 +43,7 @@ app.post("/generarOrden", (req, res) => {
   let ordenMesa = formatOrder(req.body);
   actualizarClientesMesa(req.body.mesa);
   tomarOrden(ordenMesa).then((data) => {
-    res.status(200).send("Orden recibida por meseros");
+    res.status(200).json({ message: "Orden recibida por meseros" });
   });
 });
 
@@ -54,8 +54,12 @@ app.post("/salidaCliente", (req, res) => {});
  */
 app.get("/servirMesa/:idMesa", (req, res) => {
   //Contar tiempo que el cliente dura comiendo
-  enviarOrdenAPago(mesas.find((mesa) => mesa.id_mesa == req.params.idMesa));
-  res.send("Orden servida");
+  //Enviamos a clientes la mesa con el id del encargado
+  enviarOrdenAPago(
+    mesas.find((mesa) => mesa.id_mesa == req.params.idMesa),
+    req.query.encargado
+  );
+  res.status(200).json({ message: "Orden servida" });
 });
 
 /**
@@ -64,7 +68,7 @@ app.get("/servirMesa/:idMesa", (req, res) => {
 app.put("/limpiarMesa/:idMesa", (req, res) => {
   let idMesa = req.params.idMesa;
   actualizarEstadoMesa(idMesa);
-  res.status(200).send("Mesa limpiada :D");
+  res.status(200).json({ message: "Mesa limpiada :D" });
 });
 
 app.get("/mesas", (req, res) => {
@@ -145,8 +149,9 @@ function formatOrder(orderCliente) {
  * Cuando la orden fue servida inicia el proceso de pago
  * @param {*} mesa
  */
-function enviarOrdenAPago(mesa) {
+function enviarOrdenAPago(mesa, encargado) {
   let mesaAPagar = mesa;
+  mesaAPagar.id_encargado = encargado;
   mesaAPagar.metodo_pago = elegirMetodoDePagoAleatorio();
   console.log(mesaAPagar);
   realizarPago({ mesa: mesaAPagar })
@@ -229,11 +234,11 @@ async function enviarMenuyMesa(menu, mesa) {
     mesa: mesa,
     menu: menu,
   };
-  //console.log(body);
-  //   return await fetch(hostClientes + "/clientes/orden", {
-  //     method: "POST",
-  //     body: JSON.stringify(body),
-  //   });
+  console.log(body);
+  return await fetch(hostClientes + "/clientes/orden", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
 }
 
 app.listen(port, () => {
